@@ -31,7 +31,7 @@ class WindowSearchApplet extends Applet.Applet {
             this.settings.bindProperty(Settings.BindingDirection.IN, "script_paths", "script_paths", this._onSearchChange, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "terminal_app", "terminal_app", this._onSearchChange, null);
         } catch (e) {
-            global.logError("WindowSearch: Pengaturan gagal dimuat.");
+            global.logError("WindowSearch: Failed to load settings.");
         }
 
         this.searchEntry = new St.Entry({
@@ -106,7 +106,7 @@ class WindowSearchApplet extends Applet.Applet {
     _showEmptyMessage() {
         this.menu.removeAll();
         this.windowItems = [];
-        let emptyItem = new PopupMenu.PopupMenuItem("Type for search app/window, calculator or run script.", { reactive: false });
+        let emptyItem = new PopupMenu.PopupMenuItem("Type to search app/window, calculator or run script.", { reactive: false });
         this.menu.addMenuItem(emptyItem);
     }
 
@@ -132,7 +132,7 @@ class WindowSearchApplet extends Applet.Applet {
         }
 
         // ==========================================
-        // 1. FITUR SCRIPT RUNNER
+        // 1. SCRIPT RUNNER FEATURE
         // ==========================================
         let isScriptMode = (query === this.script_prefix) || query.startsWith(this.script_prefix + " ");
         if (isScriptMode) {
@@ -142,7 +142,7 @@ class WindowSearchApplet extends Applet.Applet {
         }
 
         // ==========================================
-        // 2. FITUR KALKULATOR
+        // 2. CALCULATOR FEATURE
         // ==========================================
         let isMath = /^[\d+\-*/().\s]+$/.test(query) && /[+\-*/]/.test(query) && /\d/.test(query);
         if (isMath) {
@@ -159,7 +159,7 @@ class WindowSearchApplet extends Applet.Applet {
                     });
                     
                     let label = new St.Label({ 
-                        text: `${query} = ${result}   (Hit Enter for Copy)`, 
+                        text: `${query} = ${result}    (Hit Enter to Copy)`, 
                         style: 'margin-left: 10px; font-weight: bold;' 
                     });
 
@@ -187,7 +187,7 @@ class WindowSearchApplet extends Applet.Applet {
 
 
         // ==========================================
-        // 3. PENCARIAN WINDOW & APLIKASI
+        // 3. WINDOW & APPLICATION SEARCH
         // ==========================================
         let combinedResults = [];
 
@@ -236,7 +236,7 @@ class WindowSearchApplet extends Applet.Applet {
                         icon_type: St.IconType.SYMBOLIC
                     });
                     
-                    labelText = `[Terbuka] ${w.get_title() || "Unknown"}`;
+                    labelText = `[Open] ${w.get_title() || "Unknown"}`;
                     labelStyle += " font-weight: bold;";
                     
                     menuItem.connect('activate', () => this._activateWindow(w));
@@ -263,7 +263,7 @@ class WindowSearchApplet extends Applet.Applet {
 
             this._setSelectedIndex(0);
         } else {
-            let notFoundItem = new PopupMenu.PopupMenuItem("Tidak ditemukan...", { reactive: false });
+            let notFoundItem = new PopupMenu.PopupMenuItem("No results found...", { reactive: false });
             this.menu.addMenuItem(notFoundItem);
         }
 
@@ -276,7 +276,7 @@ class WindowSearchApplet extends Applet.Applet {
     }
 
     // ==========================================
-    // LOGIKA PENAMPILAN & PENCARIAN SCRIPT
+    // SCRIPT DISPLAY & SEARCH LOGIC
     // ==========================================
     _showScriptResults(scriptQuery) {
         let scripts = this._getScriptFiles();
@@ -292,14 +292,14 @@ class WindowSearchApplet extends Applet.Applet {
                     icon_type: St.IconType.SYMBOLIC
                 });
 
-                // Mendeteksi Ekstensi untuk warna dan label khusus
+                // Detect Extension for specific colors and labels
                 let ext = script.name.split('.').pop().toLowerCase();
                 let typeName = "Script";
-                let color = "#a8ffb2"; // hijau pucat (default/shell)
+                let color = "#a8ffb2"; // pale green (default/shell)
 
                 if (ext === 'py') {
                     typeName = "Python";
-                    color = "#ffe873"; // kuning python
+                    color = "#ffe873"; // python yellow
                 } else if (ext === 'sh') {
                     typeName = "Shell";
                 } else if (ext === 'js') {
@@ -321,7 +321,7 @@ class WindowSearchApplet extends Applet.Applet {
             });
             this._setSelectedIndex(0);
         } else {
-            let notFoundItem = new PopupMenu.PopupMenuItem("Tidak ada script yang cocok...", { reactive: false });
+            let notFoundItem = new PopupMenu.PopupMenuItem("No matching scripts found...", { reactive: false });
             this.menu.addMenuItem(notFoundItem);
         }
 
@@ -360,13 +360,13 @@ class WindowSearchApplet extends Applet.Applet {
         return scripts;
     }
 
-    // Eksekutor Pintar (Smart Executor)
+    // Smart Executor
     _runScript(path) {
         try {
-            let execCmd = `"${path}"`; // Default eksekusi file standar
+            let execCmd = `"${path}"`; // Default standard file execution
             let ext = path.split('.').pop().toLowerCase();
 
-            // Panggil program berdasarkan ekstensi file
+            // Call program based on file extension
             if (ext === 'py') {
                 execCmd = `python3 "${path}"`;
             } else if (ext === 'sh') {
@@ -375,12 +375,12 @@ class WindowSearchApplet extends Applet.Applet {
                 execCmd = `node "${path}"`;
             }
 
-            // Gabungkan program terminal dengan command script-nya
+            // Combine terminal application with script command
             let cmd = `${this.terminal_app} ${execCmd}`;
             GLib.spawn_command_line_async(cmd);
         } catch(e) {
             global.logError(e);
-            Main.notify("WindowSearch Error", "Gagal menjalankan script: " + path);
+            Main.notify("WindowSearch Error", "Failed to run script: " + path);
         }
         this.menu.close();
     }
@@ -456,7 +456,7 @@ class WindowSearchApplet extends Applet.Applet {
     _copyToClipboard(text) {
         let clipboard = St.Clipboard.get_default();
         clipboard.set_text(St.ClipboardType.CLIPBOARD, text.toString());
-        Main.notify("Kalkulator", "Hasil disalin ke clipboard: " + text);
+        Main.notify("Calculator", "Result copied to clipboard: " + text);
         this.menu.close();
     }
 }
