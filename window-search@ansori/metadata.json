@@ -1,0 +1,7 @@
+{
+    "uuid": "window-search@ansori",
+    "name": "Window Search",
+    "description": "Type to search and move to opened window. Search app, calcutor and run script.",
+    "icon": "system-search",
+    "max-instances": 1
+}

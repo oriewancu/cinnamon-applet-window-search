@@ -1,0 +1,39 @@
+{
+    "layout": {
+        "type": "header",
+        "description": "Configuration Window Search"
+    },
+    "max_results": {
+        "type": "spinbutton",
+        "default": 7,
+        "min": 1,
+        "max": 20,
+        "step": 1,
+        "units": "app",
+        "description": "Maximum data list result"
+    },
+    "keybinding": {
+        "type": "keybinding",
+        "default": "<Super>q",
+        "description": "Shortcut keyboard for open the search window"
+    },
+    "script_header": {
+        "type": "header",
+        "description": "Configuration Run Script"
+    },
+    "script_prefix": {
+        "type": "entry",
+        "default": "sh",
+        "description": "Prefix search script (ex: sh)"
+    },
+    "script_paths": {
+        "type": "entry",
+        "default": "~/scripts, /usr/local/bin",
+        "description": "Path folder script (support multiple paths, separate by comma)"
+    },
+    "terminal_app": {
+        "type": "entry",
+        "default": "gnome-terminal --",
+        "description": "Command origin terminal system (Ex: gnome-terminal -- OR x-terminal-emulator -e)"
+    }
+}
