@@ -1,7 +1,21 @@
 {
     "layout": {
         "type": "header",
-        "description": "Configuration Window Search"
+        "description": "General Settings"
+    },
+    "custom_icon": {
+        "type": "icon",
+        "default": "system-search-symbolic",
+        "description": "Applet Icon"
+    },
+    "custom_placeholder": {
+        "type": "entry",
+        "default": "Search app / calc / run script...",
+        "description": "Placeholder Text"
+    },
+    "search_header": {
+        "type": "header",
+        "description": "Search Settings"
     },
     "max_results": {
         "type": "spinbutton",
@@ -9,31 +23,31 @@
         "min": 1,
         "max": 20,
         "step": 1,
-        "units": "app",
-        "description": "Maximum data list result"
+        "units": "items",
+        "description": "Maximum number of results to display"
     },
     "keybinding": {
         "type": "keybinding",
         "default": "<Super>q",
-        "description": "Shortcut keyboard for open the search window"
+        "description": "Global keyboard shortcut"
     },
     "script_header": {
         "type": "header",
-        "description": "Configuration Run Script"
+        "description": "Script Runner Settings"
     },
     "script_prefix": {
         "type": "entry",
         "default": "sh",
-        "description": "Prefix search script (ex: sh)"
+        "description": "Trigger word for script runner (e.g., sh, run)"
     },
     "script_paths": {
         "type": "entry",
         "default": "~/scripts, /usr/local/bin",
-        "description": "Path folder script (support multiple paths, separate by comma)"
+        "description": "Directories to search for scripts (comma-separated)"
     },
     "terminal_app": {
         "type": "entry",
-        "default": "gnome-terminal --",
-        "description": "Command origin terminal system (Ex: gnome-terminal -- OR x-terminal-emulator -e)"
+        "default": "x-terminal-emulator -e",
+        "description": "Terminal execution command"
     }
 }
