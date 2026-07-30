@@ -9,6 +9,7 @@ const Meta = imports.gi.Meta;
 const Mainloop = imports.mainloop;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Util = imports.misc.util;
 
 class WindowSearchApplet extends Applet.Applet {
     constructor(metadata, orientation, panel_height, instance_id) {
@@ -19,6 +20,9 @@ class WindowSearchApplet extends Applet.Applet {
         this.isUpdatingMenu = false;
         this.keybindingId = null;
 
+        // Default values
+        this.custom_icon = "system-search-symbolic";
+        this.custom_placeholder = "Search app / calc / run script...";
         this.script_prefix = "sh";
         this.script_paths = "~/scripts";
         this.terminal_app = "x-terminal-emulator -e";
@@ -30,20 +34,41 @@ class WindowSearchApplet extends Applet.Applet {
             this.settings.bindProperty(Settings.BindingDirection.IN, "script_prefix", "script_prefix", this._onSearchChange, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "script_paths", "script_paths", this._onSearchChange, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "terminal_app", "terminal_app", this._onSearchChange, null);
+            
+            // New settings bindings
+            this.settings.bindProperty(Settings.BindingDirection.IN, "custom_icon", "custom_icon", this._onIconChanged, null);
+            this.settings.bindProperty(Settings.BindingDirection.IN, "custom_placeholder", "custom_placeholder", this._onPlaceholderChanged, null);
         } catch (e) {
-            global.logError("WindowSearch: Failed to load settings.");
+            global.logError("WindowSearch: Settings failed to load.");
         }
+
+        // ==========================================
+        // LAYOUT: BOX & ICON
+        // ==========================================
+        this.mainBox = new St.BoxLayout({ vertical: false });
+
+        this.appletIcon = new St.Icon({
+            icon_name: this.custom_icon,
+            icon_size: 20,
+            icon_type: St.IconType.SYMBOLIC,
+            style: 'margin-right: 8px;'
+        });
 
         this.searchEntry = new St.Entry({
             name: 'windowSearchEntry',
-            hint_text: '🔍 Window Search...',
+            hint_text: this.custom_placeholder,
             track_hover: true,
             can_focus: true,
             reactive: true,
             style: 'min-width: 150px; padding: 2px 10px; border-radius: 12px; background-color: rgba(0,0,0,0.2); color: white;'
         });
 
-        this.actor.add_child(this.searchEntry);
+        this.mainBox.add_child(this.appletIcon);
+        this.mainBox.add_child(this.searchEntry);
+
+        this.actor.add_child(this.mainBox); 
+
+        // ==========================================
 
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -69,6 +94,15 @@ class WindowSearchApplet extends Applet.Applet {
         this.selectedIndex = -1;
 
         this._onKeybindingChanged();
+    }
+
+    // Handlers for real-time visual updates
+    _onIconChanged() {
+        this.appletIcon.set_icon_name(this.custom_icon);
+    }
+
+    _onPlaceholderChanged() {
+        this.searchEntry.set_hint_text(this.custom_placeholder);
     }
 
     _openAndFocus() {
@@ -106,13 +140,13 @@ class WindowSearchApplet extends Applet.Applet {
     _showEmptyMessage() {
         this.menu.removeAll();
         this.windowItems = [];
-        let emptyItem = new PopupMenu.PopupMenuItem("Type to search app/window, calculator or run script.", { reactive: false });
+        let emptyItem = new PopupMenu.PopupMenuItem("Type to search app/window...", { reactive: false });
         this.menu.addMenuItem(emptyItem);
     }
 
     _onSearchChange() {
         let queryRaw = this.searchEntry.get_text();
-        let query = queryRaw.toLowerCase();
+        let query = queryRaw.toLowerCase().trim();
         
         this.isUpdatingMenu = true; 
 
@@ -124,16 +158,46 @@ class WindowSearchApplet extends Applet.Applet {
         this.windowItems = [];
         this.selectedIndex = -1;
 
-        if (query.trim() === "") {
+        if (query === "") {
             this._showEmptyMessage();
             this.isUpdatingMenu = false;
             global.stage.set_key_focus(this.searchEntry);
             return;
         }
 
-        // ==========================================
-        // 1. SCRIPT RUNNER FEATURE
-        // ==========================================
+        if (query === "config" || query === "setting" || query === "settings") {
+            let menuItem = new PopupMenu.PopupBaseMenuItem();
+            let icon = new St.Icon({
+                icon_name: 'preferences-system',
+                icon_size: 22,
+                icon_type: St.IconType.SYMBOLIC
+            });
+            
+            let label = new St.Label({ 
+                text: "Open Applet Settings", 
+                style: 'margin-left: 10px; font-weight: bold; color: #73d0ff;' 
+            });
+
+            menuItem.addActor(icon);
+            menuItem.addActor(label);
+            menuItem.connect('activate', () => this._openSettings());
+            
+            menuItem.isAction = true;
+            menuItem.actionFunc = () => this._openSettings();
+            
+            this.windowItems.push(menuItem);
+            this.menu.addMenuItem(menuItem);
+            
+            this._setSelectedIndex(0);
+            this.isUpdatingMenu = false; 
+
+            Mainloop.timeout_add(10, () => {
+                global.stage.set_key_focus(this.searchEntry);
+                return false;
+            });
+            return; 
+        }
+
         let isScriptMode = (query === this.script_prefix) || query.startsWith(this.script_prefix + " ");
         if (isScriptMode) {
             let scriptQuery = query.startsWith(this.script_prefix + " ") ? query.substring(this.script_prefix.length + 1).trim() : "";
@@ -141,9 +205,6 @@ class WindowSearchApplet extends Applet.Applet {
             return; 
         }
 
-        // ==========================================
-        // 2. CALCULATOR FEATURE
-        // ==========================================
         let isMath = /^[\d+\-*/().\s]+$/.test(query) && /[+\-*/]/.test(query) && /\d/.test(query);
         if (isMath) {
             try {
@@ -159,7 +220,7 @@ class WindowSearchApplet extends Applet.Applet {
                     });
                     
                     let label = new St.Label({ 
-                        text: `${query} = ${result}    (Hit Enter to Copy)`, 
+                        text: `${query} = ${result}   (Press Enter to Copy)`, 
                         style: 'margin-left: 10px; font-weight: bold;' 
                     });
 
@@ -185,10 +246,6 @@ class WindowSearchApplet extends Applet.Applet {
             } catch (e) {}
         }
 
-
-        // ==========================================
-        // 3. WINDOW & APPLICATION SEARCH
-        // ==========================================
         let combinedResults = [];
 
         let windows = [];
@@ -236,7 +293,7 @@ class WindowSearchApplet extends Applet.Applet {
                         icon_type: St.IconType.SYMBOLIC
                     });
                     
-                    labelText = `[Open] ${w.get_title() || "Unknown"}`;
+                    labelText = `[Opened] ${w.get_title() || "Unknown"}`;
                     labelStyle += " font-weight: bold;";
                     
                     menuItem.connect('activate', () => this._activateWindow(w));
@@ -263,7 +320,7 @@ class WindowSearchApplet extends Applet.Applet {
 
             this._setSelectedIndex(0);
         } else {
-            let notFoundItem = new PopupMenu.PopupMenuItem("No results found...", { reactive: false });
+            let notFoundItem = new PopupMenu.PopupMenuItem("Not found...", { reactive: false });
             this.menu.addMenuItem(notFoundItem);
         }
 
@@ -275,9 +332,6 @@ class WindowSearchApplet extends Applet.Applet {
         });
     }
 
-    // ==========================================
-    // SCRIPT DISPLAY & SEARCH LOGIC
-    // ==========================================
     _showScriptResults(scriptQuery) {
         let scripts = this._getScriptFiles();
         let matches = scripts.filter(s => s.name.toLowerCase().includes(scriptQuery));
@@ -292,14 +346,13 @@ class WindowSearchApplet extends Applet.Applet {
                     icon_type: St.IconType.SYMBOLIC
                 });
 
-                // Detect Extension for specific colors and labels
                 let ext = script.name.split('.').pop().toLowerCase();
                 let typeName = "Script";
-                let color = "#a8ffb2"; // pale green (default/shell)
+                let color = "#a8ffb2"; 
 
                 if (ext === 'py') {
                     typeName = "Python";
-                    color = "#ffe873"; // python yellow
+                    color = "#ffe873"; 
                 } else if (ext === 'sh') {
                     typeName = "Shell";
                 } else if (ext === 'js') {
@@ -321,7 +374,7 @@ class WindowSearchApplet extends Applet.Applet {
             });
             this._setSelectedIndex(0);
         } else {
-            let notFoundItem = new PopupMenu.PopupMenuItem("No matching scripts found...", { reactive: false });
+            let notFoundItem = new PopupMenu.PopupMenuItem("No matching scripts...", { reactive: false });
             this.menu.addMenuItem(notFoundItem);
         }
 
@@ -360,13 +413,11 @@ class WindowSearchApplet extends Applet.Applet {
         return scripts;
     }
 
-    // Smart Executor
     _runScript(path) {
         try {
-            let execCmd = `"${path}"`; // Default standard file execution
+            let execCmd = `"${path}"`; 
             let ext = path.split('.').pop().toLowerCase();
 
-            // Call program based on file extension
             if (ext === 'py') {
                 execCmd = `python3 "${path}"`;
             } else if (ext === 'sh') {
@@ -375,13 +426,17 @@ class WindowSearchApplet extends Applet.Applet {
                 execCmd = `node "${path}"`;
             }
 
-            // Combine terminal application with script command
             let cmd = `${this.terminal_app} ${execCmd}`;
             GLib.spawn_command_line_async(cmd);
         } catch(e) {
             global.logError(e);
             Main.notify("WindowSearch Error", "Failed to run script: " + path);
         }
+        this.menu.close();
+    }
+
+    _openSettings() {
+        Util.spawnCommandLine(`cinnamon-settings applets ${this.metadata.uuid} ${this.instance_id}`);
         this.menu.close();
     }
 
@@ -412,7 +467,9 @@ class WindowSearchApplet extends Applet.Applet {
             if (this.selectedIndex >= 0 && this.selectedIndex < this.windowItems.length) {
                 let item = this.windowItems[this.selectedIndex];
                 
-                if (item.isCalc) {
+                if (item.isAction) {
+                    item.actionFunc();
+                } else if (item.isCalc) {
                     this._copyToClipboard(item.calcResult);
                 } else if (item.isScript) {
                     this._runScript(item.scriptPath); 
