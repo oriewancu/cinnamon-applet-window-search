@@ -31,13 +31,15 @@ class WindowSearchApplet extends Applet.Applet {
 
         try {
             this.settings = new Settings.AppletSettings(this, metadata.uuid, instance_id);
-            this.settings.bindProperty(Settings.BindingDirection.IN, "max_results", "max_results", this._onSearchChange, null);
-            this.settings.bindProperty(Settings.BindingDirection.IN, "keybinding", "keybinding", this._onKeybindingChanged, null);
-            this.settings.bindProperty(Settings.BindingDirection.IN, "script_prefix", "script_prefix", this._onSearchChange, null);
-            this.settings.bindProperty(Settings.BindingDirection.IN, "script_paths", "script_paths", this._onSearchChange, null);
-            this.settings.bindProperty(Settings.BindingDirection.IN, "terminal_app", "terminal_app", this._onSearchChange, null);
             
-            // New settings bindings
+            // Pengaturan yang TIDAK BOLEH mencuri kursor saat diketik di Settings
+            this.settings.bindProperty(Settings.BindingDirection.IN, "max_results", "max_results", this._onSettingUpdated, null);
+            this.settings.bindProperty(Settings.BindingDirection.IN, "script_prefix", "script_prefix", this._onSettingUpdated, null);
+            this.settings.bindProperty(Settings.BindingDirection.IN, "script_paths", "script_paths", this._onSettingUpdated, null);
+            this.settings.bindProperty(Settings.BindingDirection.IN, "terminal_app", "terminal_app", this._onSettingUpdated, null);
+            
+            // Pengaturan shortcut & UI
+            this.settings.bindProperty(Settings.BindingDirection.IN, "keybinding", "keybinding", this._onKeybindingChanged, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "use_custom_icon", "use_custom_icon", this._onIconChanged, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "icon_preset", "icon_preset", this._onIconChanged, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "custom_icon", "custom_icon", this._onIconChanged, null);
@@ -46,7 +48,6 @@ class WindowSearchApplet extends Applet.Applet {
             global.logError("WindowSearch: Settings failed to load.");
         }
 
-        // Determine initial icon based on toggle
         let initialIcon = this.use_custom_icon ? this.custom_icon : this.icon_preset;
 
         // ==========================================
@@ -103,9 +104,12 @@ class WindowSearchApplet extends Applet.Applet {
         this._onKeybindingChanged();
     }
 
-    // Handlers for real-time visual updates
+    // Dummy function agar nilai variabel ter-update tanpa mengganggu kursor
+    _onSettingUpdated() {
+        // Lakukan tidak ada apa-apa. Cinnamon akan meng-update variabelnya di belakang layar.
+    }
+
     _onIconChanged() {
-        // Logika sakelar: Jika ON pakai teks custom, jika OFF pakai pilihan dropdown
         let iconToUse = this.use_custom_icon ? this.custom_icon : this.icon_preset;
         this.appletIcon.set_icon_name(iconToUse);
     }
