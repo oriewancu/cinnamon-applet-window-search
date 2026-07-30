@@ -13,6 +13,9 @@ More than just a window switcher, this applet acts as a spotlight-like productiv
 *   ⌨️ **Global Keyboard Shortcut:** Summon the search bar instantly without touching your mouse (Default: `Super + Q`).
 *   ⚙️ **Highly Customizable:** Configure max results, script paths, search prefixes, and your preferred terminal emulator via the Cinnamon Applet Settings GUI.
 
+## Overview
+![Preview](preview.png)
+
 ## 📦 Installation
 
 We provide an installation script to make the process quick and seamless.
