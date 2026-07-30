@@ -21,7 +21,9 @@ class WindowSearchApplet extends Applet.Applet {
         this.keybindingId = null;
 
         // Default values
-        this.custom_icon = "system-search-symbolic";
+        this.use_custom_icon = false;
+        this.icon_preset = "system-search-symbolic";
+        this.custom_icon = "folder";
         this.custom_placeholder = "Search app / calc / run script...";
         this.script_prefix = "sh";
         this.script_paths = "~/scripts";
@@ -36,11 +38,16 @@ class WindowSearchApplet extends Applet.Applet {
             this.settings.bindProperty(Settings.BindingDirection.IN, "terminal_app", "terminal_app", this._onSearchChange, null);
             
             // New settings bindings
+            this.settings.bindProperty(Settings.BindingDirection.IN, "use_custom_icon", "use_custom_icon", this._onIconChanged, null);
+            this.settings.bindProperty(Settings.BindingDirection.IN, "icon_preset", "icon_preset", this._onIconChanged, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "custom_icon", "custom_icon", this._onIconChanged, null);
             this.settings.bindProperty(Settings.BindingDirection.IN, "custom_placeholder", "custom_placeholder", this._onPlaceholderChanged, null);
         } catch (e) {
             global.logError("WindowSearch: Settings failed to load.");
         }
+
+        // Determine initial icon based on toggle
+        let initialIcon = this.use_custom_icon ? this.custom_icon : this.icon_preset;
 
         // ==========================================
         // LAYOUT: BOX & ICON
@@ -48,7 +55,7 @@ class WindowSearchApplet extends Applet.Applet {
         this.mainBox = new St.BoxLayout({ vertical: false });
 
         this.appletIcon = new St.Icon({
-            icon_name: this.custom_icon,
+            icon_name: initialIcon,
             icon_size: 20,
             icon_type: St.IconType.SYMBOLIC,
             style: 'margin-right: 8px;'
@@ -98,7 +105,9 @@ class WindowSearchApplet extends Applet.Applet {
 
     // Handlers for real-time visual updates
     _onIconChanged() {
-        this.appletIcon.set_icon_name(this.custom_icon);
+        // Logika sakelar: Jika ON pakai teks custom, jika OFF pakai pilihan dropdown
+        let iconToUse = this.use_custom_icon ? this.custom_icon : this.icon_preset;
+        this.appletIcon.set_icon_name(iconToUse);
     }
 
     _onPlaceholderChanged() {
