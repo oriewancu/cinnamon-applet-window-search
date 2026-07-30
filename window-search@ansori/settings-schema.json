@@ -1,19 +1,34 @@
 {
-    "layout": {
+    "header_1": {
         "type": "header",
         "description": "General Settings"
     },
-    "custom_icon": {
-        "type": "icon",
+    "use_custom_icon": {
+        "type": "switch",
+        "default": false,
+        "description": "Enable Custom Icon (Overrides preset)"
+    },
+    "icon_preset": {
+        "type": "combobox",
         "default": "system-search-symbolic",
-        "description": "Applet Icon"
+        "description": "Preset Icon",
+        "options": {
+            "Search Icon": "system-search-symbolic",
+            "OS Logo": "start-here-symbolic",
+            "Binoculars": "edit-find-symbolic"
+        }
+    },
+    "custom_icon": {
+        "type": "entry",
+        "default": "folder",
+        "description": "Custom Icon Name (e.g., folder, terminal)"
     },
     "custom_placeholder": {
         "type": "entry",
         "default": "Search app / calc / run script...",
         "description": "Placeholder Text"
     },
-    "search_header": {
+    "header_2": {
         "type": "header",
         "description": "Search Settings"
     },
@@ -31,7 +46,7 @@
         "default": "<Super>q",
         "description": "Global keyboard shortcut"
     },
-    "script_header": {
+    "header_3": {
         "type": "header",
         "description": "Script Runner Settings"
     },
